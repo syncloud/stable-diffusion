@@ -7,4 +7,5 @@ export stable-diffusion_LDAP_BIND_DN="cn={username},ou=users,dc=syncloud,dc=org"
 export stable-diffusion_LDAP_ADMIN_GROUP_DN="cn=syncloud,ou=groups,dc=syncloud,dc=org"
 export stable-diffusion_LDAP_ADMIN_GROUP_FILTER="(memberUid={username})"
 export stable-diffusion_LDAP_ADMIN_GROUP_ATTRIBUTE="memberUid"
-exec ${DIR}/stable-diffusion/bin/stable-diffusion.sh --config-path /var/snap/stable-diffusion/current/config start
+
+exec ${DIR}/python/bin/python -u ${DIR}/python/webui/launch.py --skip-prepare-environment

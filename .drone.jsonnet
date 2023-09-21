@@ -19,10 +19,10 @@ local build(arch, test_ui, dind) = [{
             ]
         },
         {
-            name: "stable-diffusion",
+            name: "webui",
             image: "docker:" + dind,
             commands: [
-                "./stable-diffusion/build.sh " + version
+                "./python/build.sh " + version
             ],
             volumes: [
                 {
