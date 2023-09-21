@@ -4,6 +4,10 @@ DIR=$( cd "$( dirname "$0" )" && pwd )
 cd ${DIR}
 
 BUILD_DIR=${DIR}/../build/snap/python
+while ! docker build -t python:syncloud . ; do
+  echo "retry docker"
+  sleep 2
+done
 docker build -t python:syncloud .
 docker create --name=python python:syncloud
 mkdir -p ${BUILD_DIR}
