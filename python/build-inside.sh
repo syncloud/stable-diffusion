@@ -8,4 +8,5 @@ cd webui
 export COMMANDLINE_ARGS="--skip-torch-cuda-test"
 python -c 'from modules import launch_utils; launch_utils.prepare_environment()'
 #pip install -r /requirements.txt
+python -m pip cache purge
 rm -rf /var/lib/apt/lists/*
