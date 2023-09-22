@@ -29,8 +29,6 @@ def module_setup(request, device, app_dir, artifact_dir):
         device.run_ssh('ls -la /var/snap/stable-diffusion > {0}/var.snap.stable-diffusion.ls.log'.format(TMP_DIR), throw=False)
         device.run_ssh('ls -la /var/snap/stable-diffusion/current/ > {0}/var.snap.stable-diffusion.current.ls.log'.format(TMP_DIR),
                        throw=False)
-        device.run_ssh('snap run stable-diffusion.sqlite /var/snap/stable-diffusion/current/app.db .dump > {0}/app.test.db.dump.log'.format(TMP_DIR),
-                       throw=False)
         device.run_ssh('ls -la /var/snap/stable-diffusion/common > {0}/var.snap.stable-diffusion.common.ls.log'.format(TMP_DIR),
                        throw=False)
         device.run_ssh('ls -la /data > {0}/data.ls.log'.format(TMP_DIR), throw=False)
