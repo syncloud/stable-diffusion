@@ -4,7 +4,7 @@ DIR=$( cd "$( dirname "$0" )" && pwd )
 cd ${DIR}
 
 BUILD_DIR=${DIR}/../build/snap/python
-while ! docker build -t python:syncloud . ; do
+while ! docker ps; do
   echo "retry docker"
   sleep 2
 done
