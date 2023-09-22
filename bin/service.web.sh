@@ -8,4 +8,7 @@ export stable-diffusion_LDAP_ADMIN_GROUP_DN="cn=syncloud,ou=groups,dc=syncloud,d
 export stable-diffusion_LDAP_ADMIN_GROUP_FILTER="(memberUid={username})"
 export stable-diffusion_LDAP_ADMIN_GROUP_ATTRIBUTE="memberUid"
 
-exec ${DIR}/python/bin/python -u ${DIR}/python/webui/launch.py --skip-prepare-environment
+exec ${DIR}/python/bin/python -u ${DIR}/python/webui/launch.py \
+  --skip-prepare-environment \
+  --ldap-uri="ldap://localhost:389" \
+  --ldap-bind-dn="cn={username},ou=users,dc=syncloud,dc=org"
