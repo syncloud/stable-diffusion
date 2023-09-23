@@ -10,7 +10,7 @@ mv stable-diffusion-webui-* webui
 cd $DIR/webui
 export COMMANDLINE_ARGS="--skip-torch-cuda-test"
 python -c 'from modules import launch_utils; launch_utils.prepare_environment()'
-cd /usr/local/lib/python3.8/site-packages
+cd /usr/local/lib/python3*/site-packages
 git apply --ignore-space-change --ignore-whitespace /patch/gradio.patch
 
 cd $DIR/webui
