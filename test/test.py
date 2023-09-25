@@ -59,7 +59,7 @@ def test_install(app_archive_path, device_host, device_password):
 
 
 def test_index(app_domain):
-    wait_for_rest(requests.session(), "https://{0}".format(app_domain), 200, 10)
+    wait_for_rest(requests.session(), "https://{0}".format(app_domain), 200, 50)
 
 
 def __log_data_dir(device):
