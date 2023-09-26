@@ -15,7 +15,7 @@ git apply --ignore-space-change --ignore-whitespace /patch/gradio.patch
 
 
 mkdir -p $DIR/models/Stable-diffusion
-wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors $DIR/models/Stable-diffusion/
+wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors -O $DIR/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors
 
 cd $DIR/webui
 cd repositories
