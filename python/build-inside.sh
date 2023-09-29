@@ -25,5 +25,6 @@ git submodule update --init --recursive
 pip install -r requirements.txt
 pip install -e .
 
+sed -i 's#config_states_dir.*#config_states_dir = "/var/snap/stable-diffusion/current/config_states"#g' $DIR/webui/modules/paths_internal.py
 python -m pip cache purge
 rm -rf /var/lib/apt/lists/*
