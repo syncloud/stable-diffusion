@@ -21,7 +21,7 @@ index 4b80c87b..1d2bbeda 100644
                  "https"
                  if self.local_url.startswith("https") or self.is_colab
 diff --git a/gradio/networking.py b/gradio/networking.py
-index b216f019..3af36508 100644
+index b216f019..65724274 100644
 --- a/gradio/networking.py
 +++ b/gradio/networking.py
 @@ -156,6 +156,12 @@ def start_server(
@@ -75,8 +75,8 @@ index b216f019..3af36508 100644
      else:
          path_to_local_server = f"http://{url_host_name}:{port}/"
  
-+    if host.startswith("/"):
-+        path_to_local_server = "http+unix://" + host.replace("/", "%2F") + "/"
++    if server_name.startswith("/"):
++        path_to_local_server = "http+unix://" + server_name.replace("/", "%2F") + "/"
 +
      return server_name, port, path_to_local_server, app, server
  
