@@ -1,5 +1,27 @@
+diff --git a/gradio/blocks.py b/gradio/blocks.py
+index 4b80c87b..1d2bbeda 100644
+--- a/gradio/blocks.py
++++ b/gradio/blocks.py
+@@ -25,6 +25,7 @@ from gradio_client import serializing
+ from gradio_client import utils as client_utils
+ from gradio_client.documentation import document, set_documentation_group
+ from packaging import version
++import requests_unixsocket
+ 
+ from gradio import (
+     analytics,
+@@ -2023,6 +2024,9 @@ Received outputs:
+             self.is_colab = utils.colab_check()
+             self.is_kaggle = utils.kaggle_check()
+ 
++            if self.local_url.startswith("http+unix"):
++                requests_unixsocket.monkeypatch()
++
+             self.protocol = (
+                 "https"
+                 if self.local_url.startswith("https") or self.is_colab
 diff --git a/gradio/networking.py b/gradio/networking.py
-index b216f019..89cd9d72 100644
+index b216f019..3af36508 100644
 --- a/gradio/networking.py
 +++ b/gradio/networking.py
 @@ -156,6 +156,12 @@ def start_server(
@@ -49,3 +71,26 @@ index b216f019..89cd9d72 100644
                  log_level="warning",
                  ssl_keyfile=ssl_keyfile,
                  ssl_certfile=ssl_certfile,
+@@ -213,6 +221,9 @@ def start_server(
+     else:
+         path_to_local_server = f"http://{url_host_name}:{port}/"
+ 
++    if host.startswith("/"):
++        path_to_local_server = "http+unix://" + host.replace("/", "%2F") + "/"
++
+     return server_name, port, path_to_local_server, app, server
+ 
+ 
+diff --git a/requirements.txt b/requirements.txt
+index ce213543..b1558a54 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -22,4 +22,5 @@ requests~=2.0
+ semantic_version~=2.0
+ typing_extensions~=4.0
+ uvicorn>=0.14.0
+-websockets>=10.0,<12.0
+\ No newline at end of file
++websockets>=10.0,<12.0
++requests-unixsocket==0.3.0
+\ No newline at end of file
