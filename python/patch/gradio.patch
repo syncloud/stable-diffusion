@@ -81,16 +81,3 @@ index b216f019..3af36508 100644
      return server_name, port, path_to_local_server, app, server
  
  
-diff --git a/requirements.txt b/requirements.txt
-index ce213543..b1558a54 100644
---- a/requirements.txt
-+++ b/requirements.txt
-@@ -22,4 +22,5 @@ requests~=2.0
- semantic_version~=2.0
- typing_extensions~=4.0
- uvicorn>=0.14.0
--websockets>=10.0,<12.0
-\ No newline at end of file
-+websockets>=10.0,<12.0
-+requests-unixsocket==0.3.0
-\ No newline at end of file
