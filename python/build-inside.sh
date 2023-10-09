@@ -15,6 +15,8 @@ python -c 'from modules import launch_utils; launch_utils.prepare_environment()'
 cd /usr/local/lib/python3*/site-packages
 git apply --ignore-space-change --ignore-whitespace /patch/gradio.patch
 
+sed -i "s#UnixHTTPConnection(httplib.HTTPConnection, object)#UnixHTTPConnection(urllib3.connection.HTTPConnection, object)#g" requests_unixsocket/adapters.py
+
 mkdir -p $DIR/models/Stable-diffusion
 wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors -O $DIR/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors
 
