@@ -81,3 +81,19 @@ index b216f019..65724274 100644
      return server_name, port, path_to_local_server, app, server
  
  
+diff --git a/gradio/queueing.py b/gradio/queueing.py
+index a36c0668..9859d8af 100644
+--- a/gradio/queueing.py
++++ b/gradio/queueing.py
+@@ -337,8 +337,8 @@ class Queue:
+             "url": str(websocket.url),
+             "headers": dict(websocket.headers),
+             "query_params": dict(websocket.query_params),
+-            "path_params": dict(websocket.path_params),
+-            "client": {"host": websocket.client.host, "port": websocket.client.port},  # type: ignore
++            "path_params": dict(websocket.path_params) #,
++            #"client": {"host": websocket.client.host, "port": websocket.client.port},  # type: ignore
+         }
+         try:
+             params[
+
