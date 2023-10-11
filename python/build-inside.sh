@@ -10,6 +10,7 @@ wget https://github.com/cyberb/stable-diffusion-webui/archive/refs/heads/master.
 tar xf master.tar.gz
 mv stable-diffusion-webui-* webui
 cd $DIR/webui
+pip install -r requirements.txt
 export COMMANDLINE_ARGS="--skip-torch-cuda-test"
 python -c 'from modules import launch_utils; launch_utils.prepare_environment()'
 cd /usr/local/lib/python3*/site-packages
