@@ -12,6 +12,7 @@ const (
 	AppDir    = "/snap/stable-diffusion/current"
 	DataDir   = "/var/snap/stable-diffusion/current"
 	CommonDir = "/var/snap/stable-diffusion/common"
+	ModelName = "v1-5-pruned-emaonly.safetensors"
 )
 
 type Installer struct {
@@ -54,6 +55,10 @@ func (i *Installer) Install() error {
 }
 
 func (i *Installer) Configure() error {
+	err := cp.Copy(path.Join(AppDir, ModelName), path.Join(DataDir, ModelName))
+	if err != nil {
+		return err
+	}
 	return i.UpdateVersion()
 }
 

@@ -3,8 +3,7 @@
 DIR=$( cd "$( dirname "$0" )" && pwd )
 
 apt update -y
-apt install -y wget git build-essential libgl1 libglib2.0-0
-pip install -r /requirements.txt
+apt install -y wget git build-essential libgl1 libglib2.0-0 libldap2-dev
 
 wget https://github.com/cyberb/stable-diffusion-webui/archive/refs/heads/master.tar.gz --progress=dot:giga
 tar xf master.tar.gz
@@ -16,10 +15,7 @@ python -c 'from modules import launch_utils; launch_utils.prepare_environment()'
 cd /usr/local/lib/python3*/site-packages
 git apply --ignore-space-change --ignore-whitespace /patch/gradio.patch
 
-sed -i "s#UnixHTTPConnection(httplib.HTTPConnection, object)#UnixHTTPConnection(urllib3.connection.HTTPConnection, object)#g" requests_unixsocket/adapters.py
-
-mkdir -p $DIR/models/Stable-diffusion
-wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors -O $DIR/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors
+wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors -O $DIR/v1-5-pruned-emaonly.safetensors
 
 cd $DIR/webui
 cd repositories
