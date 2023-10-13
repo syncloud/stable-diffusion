@@ -3,7 +3,7 @@
 DIR=$( cd "$( dirname "$0" )" && pwd )
 
 apt update -y
-apt install -y wget git build-essential libgl1 libglib2.0-0 libldap2-dev
+apt install -y wget git build-essential libgl1 libglib2.0-0 libldap2-dev libsasl2-dev
 
 wget https://github.com/cyberb/stable-diffusion-webui/archive/refs/heads/master.tar.gz --progress=dot:giga
 tar xf master.tar.gz
