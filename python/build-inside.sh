@@ -15,8 +15,6 @@ python -c 'from modules import launch_utils; launch_utils.prepare_environment()'
 cd /usr/local/lib/python3*/site-packages
 git apply --ignore-space-change --ignore-whitespace /patch/gradio.patch
 
-wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors -O $DIR/v1-5-pruned-emaonly.safetensors
-
 cd $DIR/webui
 cd repositories
 git clone https://github.com/facebookresearch/xformers.git
