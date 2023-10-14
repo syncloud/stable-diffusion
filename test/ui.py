@@ -31,8 +31,8 @@ def test_start(module_setup, app, domain, device_host):
 
 def test_login(selenium, device_user, device_password):
     selenium.open_app()
-    selenium.find_by(By.XPATH, "//input[@testid='textbox']").send_keys(device_user)
-    password = selenium.find_by(By.XPATH, "//input[@testid='password']")
+    selenium.find_by(By.XPATH, "//input[@data-testid='textbox']").send_keys(device_user)
+    password = selenium.find_by(By.XPATH, "//input[@data-testid='password']")
     password.send_keys(device_password)
     selenium.screenshot('login')
     password.send_keys(Keys.RETURN)
