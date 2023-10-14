@@ -1,6 +1,6 @@
 diff --git a/.changeset/mean-poets-go.md b/.changeset/mean-poets-go.md
 new file mode 100644
-index 000000000..a6b48b0ad
+index 00000000..a6b48b0a
 --- /dev/null
 +++ b/.changeset/mean-poets-go.md
 @@ -0,0 +1,5 @@
@@ -10,10 +10,36 @@ index 000000000..a6b48b0ad
 +
 +feat:Unix socket support
 diff --git a/gradio/blocks.py b/gradio/blocks.py
-index afc3335e1..6a391b8c5 100644
+index 3dae5619..5a99ae76 100644
 --- a/gradio/blocks.py
 +++ b/gradio/blocks.py
-@@ -2080,7 +2080,10 @@ Received outputs:
+@@ -25,7 +25,6 @@ from gradio_client import serializing
+ from gradio_client import utils as client_utils
+ from gradio_client.documentation import document, set_documentation_group
+ from packaging import version
+-import requests_unixsocket
+ 
+ from gradio import (
+     analytics,
+@@ -38,6 +37,7 @@ from gradio import (
+     themes,
+     utils,
+     wasm_utils,
++    requests_unixsocket,
+ )
+ from gradio.context import Context
+ from gradio.deprecation import check_deprecated_parameters, warn_deprecation
+@@ -2063,9 +2063,6 @@ Received outputs:
+             self.is_colab = utils.colab_check()
+             self.is_kaggle = utils.kaggle_check()
+ 
+-            if self.local_url.startswith("http+unix"):
+-                requests_unixsocket.monkeypatch()
+-
+             self.protocol = (
+                 "https"
+                 if self.local_url.startswith("https") or self.is_colab
+@@ -2084,7 +2081,10 @@ Received outputs:
              if not wasm_utils.IS_WASM:
                  # Cannot run async functions in background other than app's scope.
                  # Workaround by triggering the app endpoint
@@ -26,90 +52,33 @@ index afc3335e1..6a391b8c5 100644
                  # NOTE: One benefit of the code above dispatching `startup_events()` via a self HTTP request is
                  # that `self._queue.start()` is called in another thread which is managed by the HTTP server, `uvicorn`
 diff --git a/gradio/networking.py b/gradio/networking.py
-index b216f0191..65724274b 100644
+index 65724274..e3e5638d 100644
 --- a/gradio/networking.py
 +++ b/gradio/networking.py
-@@ -156,6 +156,12 @@ def start_server(
+@@ -20,7 +20,7 @@ from gradio.exceptions import ServerFailedToStartError
+ from gradio.routes import App
+ from gradio.tunneling import Tunnel
+ from gradio.utils import SourceFileReloader, watchfn
+-
++from gradio import requests_unixsocket
+ if TYPE_CHECKING:  # Only import for type checking (to avoid circular imports).
+     from gradio.blocks import Blocks
  
-     app = App.create_app(blocks, app_kwargs=app_kwargs)
- 
-+    uds = None
-+    if host.startswith("/"):
-+        uds = host
-+        host = None
-+        server_port = 0
-+
-     server_ports = (
-         [server_port]
-         if server_port is not None
-@@ -164,15 +170,16 @@ def start_server(
- 
-     for port in server_ports:
-         try:
--            # The fastest way to check if a port is available is to try to bind to it with socket.
--            # If the port is not available, socket will throw an OSError.
--            s = socket.socket()
--            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
--            # Really, we should be checking if (server_name, server_port) is available, but
--            # socket.bind() doesn't seem to throw an OSError with ipv6 addresses, based on my testing.
--            # Instead, we just check if the port is available on localhost.
--            s.bind((LOCALHOST_NAME, port))
--            s.close()
-+            if host is not None:
-+                # The fastest way to check if a port is available is to try to bind to it with socket.
-+                # If the port is not available, socket will throw an OSError.
-+                s = socket.socket()
-+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-+                # Really, we should be checking if (server_name, server_port) is available, but
-+                # socket.bind() doesn't seem to throw an OSError with ipv6 addresses, based on my testing.
-+                # Instead, we just check if the port is available on localhost.
-+                s.bind((LOCALHOST_NAME, port))
-+                s.close()
- 
-             # To avoid race conditions, so we also check if the port by trying to start the uvicorn server.
-             # If the port is not available, this will throw a ServerFailedToStartError.
-@@ -180,6 +187,7 @@ def start_server(
-                 app=app,
-                 port=port,
-                 host=host,
-+                uds=uds,
-                 log_level="warning",
-                 ssl_keyfile=ssl_keyfile,
-                 ssl_certfile=ssl_certfile,
-@@ -213,6 +221,9 @@ def start_server(
-     else:
-         path_to_local_server = f"http://{url_host_name}:{port}/"
- 
-+    if server_name.startswith("/"):
-+        path_to_local_server = "http+unix://" + server_name.replace("/", "%2F") + "/"
-+
-     return server_name, port, path_to_local_server, app, server
- 
- 
-diff --git a/gradio/queueing.py b/gradio/queueing.py
-index 5bcc51e1b..af4fdcb9c 100644
---- a/gradio/queueing.py
-+++ b/gradio/queueing.py
-@@ -355,9 +355,14 @@ class Queue:
-             "url": str(websocket.url),
-             "headers": dict(websocket.headers),
-             "query_params": dict(websocket.query_params),
--            "path_params": dict(websocket.path_params),
--            "client": {"host": websocket.client.host, "port": websocket.client.port},  # type: ignore
-+            "path_params": dict(websocket.path_params)
-         }
-+        if websocket.client:
-+            params["client"] = {
-+                "host": websocket.client.host,  # type: ignore
-+                "port": websocket.client.port,  # type: ignore
-+            }
-+
-         try:
-             params[
-                 "session"
+@@ -248,7 +248,10 @@ def url_ok(url: str) -> bool:
+         for _ in range(5):
+             with warnings.catch_warnings():
+                 warnings.filterwarnings("ignore")
+-                r = requests.head(url, timeout=3, verify=False)
++                session = requests.Session()
++                if url.startswith(requests_unixsocket.DEFAULT_SCHEME):
++                    session = requests_unixsocket.Session()
++                r = session.head(url, timeout=3, verify=False)
+             if r.status_code in (200, 401, 302):  # 401 or 302 if auth is set
+                 return True
+             time.sleep(0.500)
 diff --git a/gradio/requests_unixsocket.py b/gradio/requests_unixsocket.py
 new file mode 100644
-index 000000000..c8b6c6437
+index 00000000..c8b6c643
 --- /dev/null
 +++ b/gradio/requests_unixsocket.py
 @@ -0,0 +1,92 @@
@@ -206,3 +175,62 @@ index 000000000..c8b6c6437
 +    def close(self):
 +        self.pools.clear()
 \ No newline at end of file
+diff --git a/requirements.txt b/requirements.txt
+index ced793d5..5a3786e0 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -22,5 +22,4 @@ requests~=2.0
+ semantic_version~=2.0
+ typing_extensions~=4.0
+ uvicorn>=0.14.0
+-websockets>=10.0,<12.0
+-requests-unixsocket==0.3.0
+\ No newline at end of file
++websockets>=10.0,<12.0
+\ No newline at end of file
+diff --git a/test/test_networking.py b/test/test_networking.py
+index e9c18a14..f8b02626 100644
+--- a/test/test_networking.py
++++ b/test/test_networking.py
+@@ -55,8 +55,8 @@ class TestInterfaceErrors:
+ 
+ class TestStartServer:
+     # Test IPv4 and IPv6 hostnames as they would be passed from --server-name.
+-    @pytest.mark.parametrize("host", ["127.0.0.1", "[::1]"])
+-    def test_start_server(self, host):
++    @pytest.mark.parametrize("host,scheme", [("127.0.0.1", "http"), ("[::1]", "http"), ("/tmp/test.socket", "http+unix")])
++    def test_start_server(self, host, scheme):
+         io = Interface(lambda x: x, "number", "number")
+         io.favicon_path = None
+         io.config = io.get_config_file()
+@@ -65,15 +65,24 @@ class TestStartServer:
+         io.auth = None
+         io.host = host
+ 
+-        port = networking.get_first_available_port(
+-            networking.INITIAL_PORT_VALUE,
+-            networking.INITIAL_PORT_VALUE + networking.TRY_NUM_PORTS,
+-        )
++        port = None
++        if scheme == "http":
++            port = networking.get_first_available_port(
++                networking.INITIAL_PORT_VALUE,
++                networking.INITIAL_PORT_VALUE + networking.TRY_NUM_PORTS,
++            )
+         io.enable_queue = False
+-        _, _, local_path, _, server = networking.start_server(io, server_port=port)
++        _, _, local_path, _, server = networking.start_server(io, server_port=port, server_name=host)
+         url = urllib.parse.urlparse(local_path)
+-        assert url.scheme == "http"
++        assert url.scheme == scheme
+         assert url.port == port
++        if scheme == "http":
++            assert server.config.uds is None
++            assert server.config.host == host.replace("[", "").replace("]", "")
++        else:
++            assert server.config.uds == host
++            assert server.config.host is None
++
+         server.close()
+ 
+ 
