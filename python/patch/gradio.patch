@@ -175,19 +175,6 @@ index 00000000..c8b6c643
 +    def close(self):
 +        self.pools.clear()
 \ No newline at end of file
-diff --git a/requirements.txt b/requirements.txt
-index ced793d5..5a3786e0 100644
---- a/requirements.txt
-+++ b/requirements.txt
-@@ -22,5 +22,4 @@ requests~=2.0
- semantic_version~=2.0
- typing_extensions~=4.0
- uvicorn>=0.14.0
--websockets>=10.0,<12.0
--requests-unixsocket==0.3.0
-\ No newline at end of file
-+websockets>=10.0,<12.0
-\ No newline at end of file
 diff --git a/test/test_networking.py b/test/test_networking.py
 index e9c18a14..f8b02626 100644
 --- a/test/test_networking.py
