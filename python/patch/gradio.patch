@@ -1,19 +1,8 @@
-diff --git a/.changeset/mean-poets-go.md b/.changeset/mean-poets-go.md
-new file mode 100644
-index 000000000..a6b48b0ad
---- /dev/null
-+++ b/.changeset/mean-poets-go.md
-@@ -0,0 +1,5 @@
-+---
-+"gradio": minor
-+---
-+
-+feat:Unix socket support
 diff --git a/gradio/blocks.py b/gradio/blocks.py
-index afc3335e1..5a99ae766 100644
+index 64bb7b7fe..4a5bc320d 100644
 --- a/gradio/blocks.py
 +++ b/gradio/blocks.py
-@@ -37,6 +37,7 @@ from gradio import (
+@@ -36,6 +36,7 @@ from gradio import (
      themes,
      utils,
      wasm_utils,
@@ -21,7 +10,7 @@ index afc3335e1..5a99ae766 100644
  )
  from gradio.context import Context
  from gradio.deprecation import check_deprecated_parameters, warn_deprecation
-@@ -2080,7 +2081,10 @@ Received outputs:
+@@ -1929,7 +1930,10 @@ Received outputs:
              if not wasm_utils.IS_WASM:
                  # Cannot run async functions in background other than app's scope.
                  # Workaround by triggering the app endpoint
@@ -31,22 +20,22 @@ index afc3335e1..5a99ae766 100644
 +                    session = requests_unixsocket.Session()
 +                session.get(f"{self.local_url}startup-events", verify=ssl_verify)
              else:
-                 # NOTE: One benefit of the code above dispatching `startup_events()` via a self HTTP request is
-                 # that `self._queue.start()` is called in another thread which is managed by the HTTP server, `uvicorn`
+                 pass
+                 # TODO: Call the startup endpoint in the Wasm env too.
 diff --git a/gradio/networking.py b/gradio/networking.py
-index b216f0191..e3e5638d2 100644
+index 998e28620..18175ffff 100644
 --- a/gradio/networking.py
 +++ b/gradio/networking.py
-@@ -20,7 +20,7 @@ from gradio.exceptions import ServerFailedToStartError
+@@ -17,7 +17,7 @@ import uvicorn
+ from gradio.exceptions import ServerFailedToStartError
  from gradio.routes import App
  from gradio.tunneling import Tunnel
- from gradio.utils import SourceFileReloader, watchfn
 -
 +from gradio import requests_unixsocket
  if TYPE_CHECKING:  # Only import for type checking (to avoid circular imports).
      from gradio.blocks import Blocks
  
-@@ -156,6 +156,12 @@ def start_server(
+@@ -130,6 +130,12 @@ def start_server(
  
      app = App.create_app(blocks, app_kwargs=app_kwargs)
  
@@ -59,7 +48,7 @@ index b216f0191..e3e5638d2 100644
      server_ports = (
          [server_port]
          if server_port is not None
-@@ -164,15 +170,16 @@ def start_server(
+@@ -138,15 +144,16 @@ def start_server(
  
      for port in server_ports:
          try:
@@ -85,7 +74,7 @@ index b216f0191..e3e5638d2 100644
  
              # To avoid race conditions, so we also check if the port by trying to start the uvicorn server.
              # If the port is not available, this will throw a ServerFailedToStartError.
-@@ -180,6 +187,7 @@ def start_server(
+@@ -154,6 +161,7 @@ def start_server(
                  app=app,
                  port=port,
                  host=host,
@@ -93,7 +82,7 @@ index b216f0191..e3e5638d2 100644
                  log_level="warning",
                  ssl_keyfile=ssl_keyfile,
                  ssl_certfile=ssl_certfile,
-@@ -213,6 +221,9 @@ def start_server(
+@@ -175,6 +183,9 @@ def start_server(
      else:
          path_to_local_server = f"http://{url_host_name}:{port}/"
  
@@ -103,7 +92,7 @@ index b216f0191..e3e5638d2 100644
      return server_name, port, path_to_local_server, app, server
  
  
-@@ -237,7 +248,10 @@ def url_ok(url: str) -> bool:
+@@ -199,7 +210,10 @@ def url_ok(url: str) -> bool:
          for _ in range(5):
              with warnings.catch_warnings():
                  warnings.filterwarnings("ignore")
@@ -116,10 +105,10 @@ index b216f0191..e3e5638d2 100644
                  return True
              time.sleep(0.500)
 diff --git a/gradio/queueing.py b/gradio/queueing.py
-index 5bcc51e1b..af4fdcb9c 100644
+index 55257b746..a55f0f011 100644
 --- a/gradio/queueing.py
 +++ b/gradio/queueing.py
-@@ -355,9 +355,14 @@ class Queue:
+@@ -342,9 +342,14 @@ class Queue:
              "url": str(websocket.url),
              "headers": dict(websocket.headers),
              "query_params": dict(websocket.query_params),
@@ -235,4 +224,3 @@ index 000000000..c8b6c6437
 +    def close(self):
 +        self.pools.clear()
 \ No newline at end of file
- 
