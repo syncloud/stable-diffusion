@@ -112,12 +112,12 @@ index 55257b746..a55f0f011 100644
                  "session"
 diff --git a/gradio/requests_unixsocket.py b/gradio/requests_unixsocket.py
 new file mode 100644
-index 000000000..d3e300e16
+index 000000000..61e3c2d42
 --- /dev/null
 +++ b/gradio/requests_unixsocket.py
 @@ -0,0 +1,156 @@
 +import socket
-+
++import sys
 +from requests.adapters import HTTPAdapter
 +from requests.compat import urlparse, unquote
 +import requests
