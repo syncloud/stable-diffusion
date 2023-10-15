@@ -1,5 +1,5 @@
 diff --git a/gradio/blocks.py b/gradio/blocks.py
-index 64bb7b7fe..4a5bc320d 100644
+index 64bb7b7fe..89a5eadf8 100644
 --- a/gradio/blocks.py
 +++ b/gradio/blocks.py
 @@ -36,6 +36,7 @@ from gradio import (
@@ -10,20 +10,17 @@ index 64bb7b7fe..4a5bc320d 100644
  )
  from gradio.context import Context
  from gradio.deprecation import check_deprecated_parameters, warn_deprecation
-@@ -1929,7 +1930,10 @@ Received outputs:
+@@ -1929,6 +1930,8 @@ Received outputs:
              if not wasm_utils.IS_WASM:
                  # Cannot run async functions in background other than app's scope.
                  # Workaround by triggering the app endpoint
--                requests.get(f"{self.local_url}startup-events", verify=ssl_verify)
-+                session = requests.Session()
 +                if self.local_url.startswith(requests_unixsocket.DEFAULT_SCHEME):
-+                    session = requests_unixsocket.Session()
-+                session.get(f"{self.local_url}startup-events", verify=ssl_verify)
++                    requests_unixsocket.monkeypatch()
+                 requests.get(f"{self.local_url}startup-events", verify=ssl_verify)
              else:
                  pass
-                 # TODO: Call the startup endpoint in the Wasm env too.
 diff --git a/gradio/networking.py b/gradio/networking.py
-index 998e28620..18175ffff 100644
+index 998e28620..9772020e3 100644
 --- a/gradio/networking.py
 +++ b/gradio/networking.py
 @@ -17,7 +17,7 @@ import uvicorn
@@ -92,18 +89,6 @@ index 998e28620..18175ffff 100644
      return server_name, port, path_to_local_server, app, server
  
  
-@@ -199,7 +210,10 @@ def url_ok(url: str) -> bool:
-         for _ in range(5):
-             with warnings.catch_warnings():
-                 warnings.filterwarnings("ignore")
--                r = requests.head(url, timeout=3, verify=False)
-+                session = requests.Session()
-+                if url.startswith(requests_unixsocket.DEFAULT_SCHEME):
-+                    session = requests_unixsocket.Session()
-+                r = session.head(url, timeout=3, verify=False)
-             if r.status_code in (200, 401, 302):  # 401 or 302 if auth is set
-                 return True
-             time.sleep(0.500)
 diff --git a/gradio/queueing.py b/gradio/queueing.py
 index 55257b746..a55f0f011 100644
 --- a/gradio/queueing.py
@@ -127,10 +112,10 @@ index 55257b746..a55f0f011 100644
                  "session"
 diff --git a/gradio/requests_unixsocket.py b/gradio/requests_unixsocket.py
 new file mode 100644
-index 000000000..c8b6c6437
+index 000000000..d3e300e16
 --- /dev/null
 +++ b/gradio/requests_unixsocket.py
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,156 @@
 +import socket
 +
 +from requests.adapters import HTTPAdapter
@@ -144,15 +129,79 @@ index 000000000..c8b6c6437
 +
 +DEFAULT_SCHEME = 'http+unix://'
 +
++# The following was adapted from requests_unixsocket
++# https://github.com/msabramo/requests-unixsocket
 +
 +class Session(requests.Session):
 +    def __init__(self, url_scheme=DEFAULT_SCHEME, *args, **kwargs):
 +        super(Session, self).__init__(*args, **kwargs)
 +        self.mount(url_scheme, UnixAdapter())
 +
++class monkeypatch(object):
++    def __init__(self, url_scheme=DEFAULT_SCHEME):
++        self.session = Session()
++        requests = self._get_global_requests_module()
 +
-+# The following was adapted from some code from requests_unixsocket
-+# https://github.com/msabramo/requests-unixsocket/blob/master/requests_unixsocket/adapters.py
++        # Methods to replace
++        self.methods = ('request', 'get', 'head', 'post',
++                        'patch', 'put', 'delete', 'options')
++        # Store the original methods
++        self.orig_methods = dict(
++            (m, requests.__dict__[m]) for m in self.methods)
++        # Monkey patch
++        g = globals()
++        for m in self.methods:
++            requests.__dict__[m] = g[m]
++
++    def _get_global_requests_module(self):
++        return sys.modules['requests']
++
++    def __enter__(self):
++        return self
++
++    def __exit__(self, *args):
++        requests = self._get_global_requests_module()
++        for m in self.methods:
++            requests.__dict__[m] = self.orig_methods[m]
++
++
++# These are the same methods defined for the global requests object
++def request(method, url, **kwargs):
++    session = Session()
++    return session.request(method=method, url=url, **kwargs)
++
++
++def get(url, **kwargs):
++    kwargs.setdefault('allow_redirects', True)
++    return request('get', url, **kwargs)
++
++
++def head(url, **kwargs):
++    kwargs.setdefault('allow_redirects', False)
++    return request('head', url, **kwargs)
++
++
++def post(url, data=None, json=None, **kwargs):
++    return request('post', url, data=data, json=json, **kwargs)
++
++
++def patch(url, data=None, **kwargs):
++    return request('patch', url, data=data, **kwargs)
++
++
++def put(url, data=None, **kwargs):
++    return request('put', url, data=data, **kwargs)
++
++
++def delete(url, **kwargs):
++    return request('delete', url, **kwargs)
++
++
++def options(url, **kwargs):
++    kwargs.setdefault('allow_redirects', True)
++    return request('options', url, **kwargs)
++
++
 +class UnixHTTPConnection(urllib3.connection.HTTPConnection, object):
 +
 +    def __init__(self, unix_socket_url, timeout=60):
@@ -223,4 +272,3 @@ index 000000000..c8b6c6437
 +
 +    def close(self):
 +        self.pools.clear()
-\ No newline at end of file
