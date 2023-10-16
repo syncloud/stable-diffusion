@@ -1,7 +1,9 @@
 package installer
 
 import (
+	"errors"
 	cp "github.com/otiai10/copy"
+	"go.uber.org/zap"
 	"hooks/platform"
 	"os"
 	"path"
@@ -20,14 +22,16 @@ type Installer struct {
 	currentVersionFile string
 	configDir          string
 	database           Database
+	logger             *zap.Logger
 }
 
-func New() *Installer {
+func New(logger *zap.Logger) *Installer {
 	configDir := path.Join(DataDir, "config")
 	return &Installer{
 		newVersionFile:     path.Join(AppDir, "version"),
 		currentVersionFile: path.Join(DataDir, "version"),
 		configDir:          configDir,
+		logger:             logger,
 	}
 }
 
@@ -89,9 +93,13 @@ func (i *Installer) StorageChange() error {
 	if err != nil {
 		return err
 	}
-	err = os.Mkdir(path.Join(storageDir, "output"), 0755)
-	if err != nil {
-	return err
+	outputDir := path.Join(storageDir, "output")
+	if _, err = os.Stat(outputDir); errors.Is(err, os.ErrNotExist) {
+		i.logger.Info("creating", zap.String("outputDir", outputDir))
+		err = os.Mkdir(outputDir, 0755)
+		if err != nil {
+			return err
+		}
 	}
 	err = Chown(storageDir, App)
 	if err != nil {
