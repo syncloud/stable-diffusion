@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"hooks/installer"
+	"hooks/log"
 	"os"
 )
 
 func main() {
+	logger := log.Logger()
 	var rootCmd = &cobra.Command{
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return installer.New().Configure()
+			return installer.New(logger).Configure()
 		},
 	}
 

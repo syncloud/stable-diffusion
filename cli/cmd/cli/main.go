@@ -20,7 +20,7 @@ func main() {
 		Use: "storage-change",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger.Info("storage-change")
-			return installer.New().StorageChange()
+			return installer.New(logger).StorageChange()
 		},
 	})
 
