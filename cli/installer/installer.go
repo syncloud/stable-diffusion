@@ -89,18 +89,10 @@ func (i *Installer) StorageChange() error {
 	if err != nil {
 		return err
 	}
-	//	err = os.Mkdir(path.Join(storageDir, "cache"), 0755)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	err = os.Mkdir(path.Join(storageDir, "photos"), 0755)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	err = os.Mkdir(path.Join(storageDir, "temp"), 0755)
-	//	if err != nil {
-	//		return err
-	//	}
+	err = os.Mkdir(path.Join(storageDir, "output"), 0755)
+	if err != nil {
+	return err
+	}
 	err = Chown(storageDir, App)
 	if err != nil {
 		return err

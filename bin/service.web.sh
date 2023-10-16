@@ -13,4 +13,5 @@ exec ${DIR}/python/bin/python -u ${DIR}/python/webui/launch.py \
   --data-dir '/var/snap/stable-diffusion/current' \
   --ckpt "/var/snap/stable-diffusion/current/v1-5-pruned-emaonly.safetensors" \
   --ldap-uri 'ldap://localhost:389' \
-  --ldap-bind-dn 'cn={username},ou=users,dc=syncloud,dc=org'
+  --ldap-bind-dn 'cn={username},ou=users,dc=syncloud,dc=org' \
+  --outdir-samples '/data/stable-diffusion/output'
