@@ -36,7 +36,7 @@ def test_login(selenium, device_user, device_password):
     selenium.screenshot('login')
     password.send_keys(Keys.RETURN)
     # selenium.find_by_xpath("//button[contains(.,'Login')]")
-    selenium.find_by(By.XPATH, "//div[@title='Logout']")
+    selenium.find_by(By.XPATH, "//button[contains(.,'Generate')]")
     selenium.screenshot('main')
 
 
